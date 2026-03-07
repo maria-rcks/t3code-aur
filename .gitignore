@@ -1,0 +1,14 @@
+# makepkg artifacts
+src/
+pkg/
+*.pkg.tar.*
+*.src.tar.*
+
+# downloaded upstream assets
+T3-Code-*.AppImage
+
+# CI metadata
+sha256sums.txt
+
+# local workdirs
+work/
