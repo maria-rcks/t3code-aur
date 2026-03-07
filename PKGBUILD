@@ -2,24 +2,26 @@
 
 pkgname=t3code-bin
 pkgver=0.0.4
-pkgrel=1
+pkgrel=2
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
 _upstream_tag='v0.0.4'
 _upstream_version='0.0.4'
 _appimage_name="T3-Code-${_upstream_version}-x86_64.AppImage"
-url='https://github.com/pingdotgg/t3code'
+url='https://t3.codes'
 license=('MIT')
 depends=(
-  'openai-codex-bin'
   'alsa-lib'
   'at-spi2-core'
   'cairo'
   'dbus'
   'expat'
   'gcc-libs'
+  'gdk-pixbuf2'
   'glib2'
   'gtk3'
+  'hicolor-icon-theme'
+  'libcups'
   'libdrm'
   'libx11'
   'libxcb'
@@ -33,14 +35,16 @@ depends=(
   'nspr'
   'nss'
   'pango'
+  'systemd-libs'
+  'xdg-utils'
   'zlib'
 )
 optdepends=(
-  'xdg-utils: open links from the desktop client'
+  'openai-codex-bin: use the system-installed Codex CLI'
 )
-provides=('t3code')
+provides=("t3code=${pkgver}")
 conflicts=('t3code')
-options=('!strip')
+options=('!debug' '!emptydirs' '!strip')
 source=(
   "${_appimage_name}::https://github.com/pingdotgg/t3code/releases/download/${_upstream_tag}/${_appimage_name}"
   't3code-icon.png'
@@ -52,31 +56,23 @@ sha256sums=(
   '935d8f2af0c703f9c39517ee57cc4930b19d02d533be930b63f0e82f93614b43'
 )
 
-package() {
-  cd "$srcdir"
-
-  chmod +x "$_appimage_name"
-  "./$_appimage_name" --appimage-extract >/dev/null
+prepare() {
+  chmod +x "$srcdir/$_appimage_name"
+  rm -rf "$srcdir/squashfs-root"
+  "$srcdir/$_appimage_name" --appimage-extract >/dev/null
 
   if [[ ! -d "$srcdir/squashfs-root" ]]; then
     echo "Failed to extract AppImage payload." >&2
     return 1
   fi
+}
 
+package() {
   install -d "$pkgdir/opt/$pkgname"
   cp -a "$srcdir/squashfs-root/." "$pkgdir/opt/$pkgname/"
 
-  # AppImage payloads can carry restrictive top-level permissions.
-  find "$pkgdir/opt/$pkgname" -type d -exec chmod 755 {} +
-  find "$pkgdir/opt/$pkgname" -type f -exec chmod 644 {} +
-  chmod 755 \
-    "$pkgdir/opt/$pkgname/AppRun" \
-    "$pkgdir/opt/$pkgname/chrome-sandbox" \
-    "$pkgdir/opt/$pkgname/chrome_crashpad_handler" \
-    "$pkgdir/opt/$pkgname/t3-code-desktop"
-  if [[ -d "$pkgdir/opt/$pkgname/resources/app.asar.unpacked" ]]; then
-    find "$pkgdir/opt/$pkgname/resources/app.asar.unpacked" -type f \( -name '*.node' -o -name '*.so' \) -exec chmod 755 {} +
-  fi
+  # Preserve upstream execute bits while ensuring the payload stays readable.
+  chmod -R a+rX "$pkgdir/opt/$pkgname"
 
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/t3code" << 'EOF'
 #!/usr/bin/env bash
@@ -90,9 +86,6 @@ if [[ -z "${CODEX_CLI_PATH-}" ]] && command -v codex >/dev/null 2>&1; then
 fi
 
 export PATH="$appdir:$appdir/usr/sbin:$PATH"
-if [[ -d "$appdir/usr/lib" ]]; then
-  export LD_LIBRARY_PATH="$appdir/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-fi
 export XDG_DATA_DIRS="$appdir/usr/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
 export GSETTINGS_SCHEMA_DIR="$appdir/usr/share/glib-2.0/schemas${GSETTINGS_SCHEMA_DIR:+:$GSETTINGS_SCHEMA_DIR}"
 
@@ -108,7 +101,8 @@ EOF
 
   ln -s t3code "$pkgdir/usr/bin/t3-code-desktop"
 
-  install -Dm644 "$srcdir/t3code-icon.png" "$pkgdir/usr/share/pixmaps/t3code.png"
+  install -Dm644 "$srcdir/t3code-icon.png" \
+    "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/t3code.png"
 
   install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/t3code.desktop" << 'EOF'
 [Desktop Entry]
