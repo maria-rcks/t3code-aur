@@ -2,7 +2,7 @@
 
 pkgname=t3code-bin
 pkgver=0.0.8
-pkgrel=1
+pkgrel=2
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
 _upstream_tag='v0.0.8'
@@ -102,7 +102,12 @@ EOF
   ln -s t3code "$pkgdir/usr/bin/t3-code-desktop"
 
   install -Dm644 "$srcdir/t3code-icon.png" \
+    "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/t3-code-desktop.png"
+  ln -s t3-code-desktop.png \
     "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/t3code.png"
+  install -Dm644 "$srcdir/t3code-icon.png" \
+    "$pkgdir/usr/share/pixmaps/t3-code-desktop.png"
+  ln -s t3-code-desktop.png "$pkgdir/usr/share/pixmaps/t3code.png"
 
   install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/t3code.desktop" << 'EOF'
 [Desktop Entry]
@@ -111,7 +116,7 @@ Comment=T3 Code desktop build
 Exec=t3code %U
 Terminal=false
 Type=Application
-Icon=t3code
+Icon=t3-code-desktop
 StartupWMClass=T3 Code (Alpha)
 Categories=Development;
 EOF

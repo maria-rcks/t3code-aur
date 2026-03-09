@@ -1,7 +1,7 @@
 pkgbase = t3code-bin
 	pkgdesc = T3 Code desktop app packaged from the upstream AppImage
 	pkgver = 0.0.8
-	pkgrel = 1
+	pkgrel = 2
 	url = https://t3.codes
 	arch = x86_64
 	license = MIT
