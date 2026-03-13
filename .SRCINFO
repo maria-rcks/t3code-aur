@@ -1,6 +1,6 @@
 pkgbase = t3code-bin
 	pkgdesc = T3 Code desktop app packaged from the upstream AppImage
-	pkgver = 0.0.10
+	pkgver = 0.0.11
 	pkgrel = 1
 	url = https://t3.codes
 	arch = x86_64
@@ -33,15 +33,15 @@ pkgbase = t3code-bin
 	depends = xdg-utils
 	depends = zlib
 	optdepends = openai-codex-bin: use the system-installed Codex CLI
-	provides = t3code=0.0.10
+	provides = t3code=0.0.11
 	conflicts = t3code
 	options = !debug
 	options = !emptydirs
 	options = !strip
-	source = T3-Code-0.0.10-x86_64.AppImage::https://github.com/pingdotgg/t3code/releases/download/v0.0.10/T3-Code-0.0.10-x86_64.AppImage
+	source = T3-Code-0.0.11-x86_64.AppImage::https://github.com/pingdotgg/t3code/releases/download/v0.0.11/T3-Code-0.0.11-x86_64.AppImage
 	source = t3code-icon.png
 	source = LICENSE
-	sha256sums = cdc3ec6a3e09c88f1497b559e30b18bcd1fdd4680a4190604400e1815bbfcc7f
+	sha256sums = b5ab16c564a93d957ef8ddf815d72633bb24e5cf357c150fd4f9ac6c1a4c4473
 	sha256sums = 52c86008b11f90f36b8a8f4cc43b1352d5fda9084c6e5691b806f5bca1a968b6
 	sha256sums = 935d8f2af0c703f9c39517ee57cc4930b19d02d533be930b63f0e82f93614b43
 
