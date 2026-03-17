@@ -2,7 +2,7 @@
 
 pkgname=t3code-bin
 pkgver=0.0.11
-pkgrel=1
+pkgrel=2
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
 _upstream_tag='v0.0.11'
@@ -40,7 +40,7 @@ depends=(
   'zlib'
 )
 optdepends=(
-  'openai-codex-bin: use the system-installed Codex CLI'
+  'openai-codex: use the system-installed Codex CLI'
 )
 provides=("t3code=${pkgver}")
 conflicts=('t3code')
