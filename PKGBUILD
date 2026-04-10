@@ -2,7 +2,7 @@
 
 pkgname=t3code-bin
 pkgver=0.0.16
-pkgrel=1
+pkgrel=2
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
 _upstream_tag='v0.0.16'
@@ -85,7 +85,7 @@ if [[ -z "${CODEX_CLI_PATH-}" ]] && command -v codex >/dev/null 2>&1; then
   export CODEX_CLI_PATH="$(command -v codex)"
 fi
 
-export PATH="$appdir:$appdir/usr/sbin:$PATH"
+export PATH="$appdir:$appdir/usr/bin:$appdir/usr/sbin:$PATH"
 export XDG_DATA_DIRS="$appdir/usr/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
 export GSETTINGS_SCHEMA_DIR="$appdir/usr/share/glib-2.0/schemas${GSETTINGS_SCHEMA_DIR:+:$GSETTINGS_SCHEMA_DIR}"
 
@@ -96,7 +96,7 @@ else
   extra_flags+=(--ozone-platform-hint=auto)
 fi
 
-exec "$appdir/t3-code-desktop" --no-sandbox "${extra_flags[@]}" "$@"
+exec "$appdir/usr/bin/t3code" --no-sandbox "${extra_flags[@]}" "$@"
 EOF
 
   ln -s t3code "$pkgdir/usr/bin/t3-code-desktop"
