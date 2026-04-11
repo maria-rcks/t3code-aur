@@ -96,7 +96,7 @@ else
   extra_flags+=(--ozone-platform-hint=auto)
 fi
 
-exec "$appdir/usr/bin/t3code" --no-sandbox "${extra_flags[@]}" "$@"
+exec "$appdir/t3code" --no-sandbox "${extra_flags[@]}" "$@"
 EOF
 
   ln -s t3code "$pkgdir/usr/bin/t3-code-desktop"
