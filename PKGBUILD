@@ -2,7 +2,7 @@
 
 pkgname=t3code-bin
 pkgver=0.0.17
-pkgrel=1
+pkgrel=2
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
 _upstream_tag='v0.0.17'
@@ -96,7 +96,7 @@ else
   extra_flags+=(--ozone-platform-hint=auto)
 fi
 
-exec "$appdir/usr/bin/t3code" --no-sandbox "${extra_flags[@]}" "$@"
+exec "$appdir/t3code" --no-sandbox "${extra_flags[@]}" "$@"
 EOF
 
   ln -s t3code "$pkgdir/usr/bin/t3-code-desktop"
