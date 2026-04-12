@@ -102,22 +102,22 @@ EOF
   ln -s t3code "$pkgdir/usr/bin/t3-code-desktop"
 
   install -Dm644 "$srcdir/t3code-icon.png" \
-    "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/t3-code-desktop.png"
-  ln -s t3-code-desktop.png \
     "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/t3code.png"
+  ln -s t3code.png \
+    "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/t3-code-desktop.png"
   install -Dm644 "$srcdir/t3code-icon.png" \
-    "$pkgdir/usr/share/pixmaps/t3-code-desktop.png"
-  ln -s t3-code-desktop.png "$pkgdir/usr/share/pixmaps/t3code.png"
+    "$pkgdir/usr/share/pixmaps/t3code.png"
+  ln -s t3code.png "$pkgdir/usr/share/pixmaps/t3-code-desktop.png"
 
-  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/t3-code-desktop.desktop" << 'EOF'
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/applications/t3code.desktop" << 'EOF'
 [Desktop Entry]
 Name=T3 Code
 Comment=T3 Code desktop build
 Exec=t3code %U
 Terminal=false
 Type=Application
-Icon=t3-code-desktop
-StartupWMClass=T3 Code (Alpha)
+Icon=t3code
+StartupWMClass=t3code
 Categories=Development;
 EOF
 
