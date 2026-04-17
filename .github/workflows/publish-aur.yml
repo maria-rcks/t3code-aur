@@ -1,4 +1,4 @@
-name: Publish t3code-bin to AUR
+name: Publish t3code packages to AUR
 
 on:
   push:
@@ -19,17 +19,40 @@ permissions:
 
 env:
   UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO || 'pingdotgg/t3code' }}
-  STATE_FILE: ${{ vars.STATE_FILE || 'upstream.sha256' }}
-  AUR_GIT_URL: ${{ vars.AUR_GIT_URL || 'ssh://aur@aur.archlinux.org/t3code-bin.git' }}
-  AUR_BRANCH: ${{ vars.AUR_BRANCH || 'master' }}
   AUR_COMMIT_NAME: ${{ vars.AUR_COMMIT_NAME || 't3code-ci' }}
   AUR_COMMIT_EMAIL: ${{ vars.AUR_COMMIT_EMAIL || 't3code-ci@users.noreply.github.com' }}
-  AUR_PAYLOAD_FILES: ${{ vars.AUR_PAYLOAD_FILES || 'PKGBUILD .SRCINFO LICENSE t3code-icon.png' }}
 
 jobs:
   publish:
-    name: Check, build, and publish
+    name: Check, build, and publish (${{ matrix.package.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        package:
+          - name: t3code-bin
+            package_dir: .
+            pkgbuild_path: PKGBUILD
+            srcinfo_path: .SRCINFO
+            state_file: upstream.sha256
+            aur_git_url: ssh://aur@aur.archlinux.org/t3code-bin.git
+            aur_payload_files: PKGBUILD .SRCINFO LICENSE t3code-icon.png
+            release_prerelease: 'false'
+            release_tag_regex: '^v'
+            release_version_prefix: 'v'
+            asset_regex: '^T3-Code-.*-x86_64\.AppImage$'
+          - name: t3code-nightly-bin
+            package_dir: packages/t3code-nightly-bin
+            pkgbuild_path: packages/t3code-nightly-bin/PKGBUILD
+            srcinfo_path: packages/t3code-nightly-bin/.SRCINFO
+            state_file: packages/t3code-nightly-bin/upstream.sha256
+            aur_git_url: ssh://aur@aur.archlinux.org/t3code-nightly-bin.git
+            aur_payload_files: packages/t3code-nightly-bin/PKGBUILD packages/t3code-nightly-bin/.SRCINFO LICENSE t3code-icon.png
+            release_prerelease: 'true'
+            release_tag_regex: '^nightly-v'
+            release_version_prefix: 'nightly-v'
+            asset_regex: '^T3-Code-.*-x86_64\.AppImage$'
     defaults:
       run:
         shell: bash
@@ -53,11 +76,12 @@ jobs:
       - name: Validate repository layout
         run: |
           set -euo pipefail
-          test -f PKGBUILD
-          test -f .SRCINFO
+          test -f "${{ matrix.package.pkgbuild_path }}"
+          test -f "${{ matrix.package.srcinfo_path }}"
           test -f LICENSE
           test -f t3code-icon.png
           test -x scripts/check_upstream.sh
+          test -x scripts/stage_shared_assets.sh
           test -x scripts/update_pkgbuild.sh
           test -x scripts/publish_aur.sh
 
@@ -65,6 +89,11 @@ jobs:
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
+          STATE_FILE: ${{ matrix.package.state_file }}
+          RELEASE_PRERELEASE: ${{ matrix.package.release_prerelease }}
+          RELEASE_TAG_REGEX: ${{ matrix.package.release_tag_regex }}
+          RELEASE_VERSION_PREFIX: ${{ matrix.package.release_version_prefix }}
+          ASSET_REGEX: ${{ matrix.package.asset_regex }}
         run: |
           set -euo pipefail
           scripts/check_upstream.sh
@@ -99,11 +128,12 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         id: update
         env:
+          PKGBUILD_PATH: ${{ matrix.package.pkgbuild_path }}
           UPSTREAM_TAG: ${{ steps.check.outputs.upstream_tag }}
           UPSTREAM_VERSION: ${{ steps.check.outputs.upstream_version }}
           PKGVER_CANDIDATE: ${{ steps.check.outputs.pkgver_candidate }}
           APPIMAGE_SHA256: ${{ steps.check.outputs.appimage_sha256 }}
-          STATE_FILE: ${{ env.STATE_FILE }}
+          STATE_FILE: ${{ matrix.package.state_file }}
         run: |
           set -euo pipefail
           scripts/update_pkgbuild.sh
@@ -115,36 +145,44 @@ jobs:
           useradd -m builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
 
+      - name: Stage shared package assets
+        if: steps.decide.outputs.should_publish == 'true'
+        env:
+          WORKSPACE_ROOT: ${{ github.workspace }}
+          PACKAGE_DIR: ${{ github.workspace }}/${{ matrix.package.package_dir }}
+        run: |
+          set -euo pipefail
+          scripts/stage_shared_assets.sh
+
       - name: Regenerate .SRCINFO
         if: steps.decide.outputs.should_publish == 'true'
         run: |
           set -euo pipefail
-          su - builder -c "cd '$GITHUB_WORKSPACE' && makepkg --printsrcinfo > .SRCINFO"
+          su - builder -c "cd '$GITHUB_WORKSPACE/${{ matrix.package.package_dir }}' && makepkg --printsrcinfo > .SRCINFO"
 
       - name: Build package
         if: steps.decide.outputs.should_publish == 'true'
         run: |
           set -euo pipefail
-          su - builder -c "cd '$GITHUB_WORKSPACE' && makepkg -f --nodeps --noconfirm"
+          su - builder -c "cd '$GITHUB_WORKSPACE/${{ matrix.package.package_dir }}' && makepkg -f --nodeps --noconfirm"
 
       - name: Upload build artifact
         if: steps.decide.outputs.should_publish == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: t3code-bin-package
+          name: ${{ matrix.package.name }}-package
           if-no-files-found: error
-          path: |
-            *.pkg.tar.zst
+          path: ${{ matrix.package.package_dir }}/*.pkg.tar.zst
 
       - name: Publish package files to AUR
         if: steps.decide.outputs.should_publish == 'true'
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          AUR_GIT_URL: ${{ env.AUR_GIT_URL }}
-          AUR_BRANCH: ${{ env.AUR_BRANCH }}
+          AUR_GIT_URL: ${{ matrix.package.aur_git_url }}
+          AUR_BRANCH: ${{ vars.AUR_BRANCH || 'master' }}
           AUR_COMMIT_NAME: ${{ env.AUR_COMMIT_NAME }}
           AUR_COMMIT_EMAIL: ${{ env.AUR_COMMIT_EMAIL }}
-          AUR_PAYLOAD_FILES: ${{ env.AUR_PAYLOAD_FILES }}
+          AUR_PAYLOAD_FILES: ${{ matrix.package.aur_payload_files }}
         run: |
           set -euo pipefail
           scripts/publish_aur.sh
@@ -154,14 +192,16 @@ jobs:
         env:
           PKGVER: ${{ steps.update.outputs.pkgver }}
           PKGREL: ${{ steps.update.outputs.pkgrel }}
-          STATE_FILE: ${{ env.STATE_FILE }}
+          PKGBUILD_PATH: ${{ matrix.package.pkgbuild_path }}
+          SRCINFO_PATH: ${{ matrix.package.srcinfo_path }}
+          STATE_FILE: ${{ matrix.package.state_file }}
         run: |
           set -euo pipefail
 
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git rev-parse --is-inside-work-tree >/dev/null
 
-          git add PKGBUILD .SRCINFO "${STATE_FILE}"
+          git add "${PKGBUILD_PATH}" "${SRCINFO_PATH}" "${STATE_FILE}"
           if git diff --cached --quiet; then
             echo "No staged changes to commit."
             exit 0
@@ -169,5 +209,5 @@ jobs:
 
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -m "chore(update): t3code-bin ${PKGVER}-${PKGREL}"
+              commit -m "chore(update): ${{ matrix.package.name }} ${PKGVER}-${PKGREL}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
