@@ -1,12 +1,12 @@
 # Maintainer: anon
 
 pkgname=t3code-bin
-pkgver=0.0.21
+pkgver=0.0.22
 pkgrel=1
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
-_upstream_tag='v0.0.21'
-_upstream_version='0.0.21'
+_upstream_tag='v0.0.22'
+_upstream_version='0.0.22'
 _appimage_name="T3-Code-${_upstream_version}-x86_64.AppImage"
 url='https://t3.codes'
 license=('MIT')
@@ -51,7 +51,7 @@ source=(
   'LICENSE'
 )
 sha256sums=(
-  '79009fb24a65f8924ec9a618ee88180a2d190ae58d45c129b1e58c9e24bf2c24'
+  '254945f46e8a92f3b2e79d07c2776c9df6100549517915822547ba72ac7ff577'
   '52c86008b11f90f36b8a8f4cc43b1352d5fda9084c6e5691b806f5bca1a968b6'
   '935d8f2af0c703f9c39517ee57cc4930b19d02d533be930b63f0e82f93614b43'
 )
