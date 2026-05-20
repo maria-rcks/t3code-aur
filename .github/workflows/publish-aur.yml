@@ -50,8 +50,8 @@ jobs:
             aur_git_url: ssh://aur@aur.archlinux.org/t3code-nightly-bin.git
             aur_payload_files: packages/t3code-nightly-bin/PKGBUILD packages/t3code-nightly-bin/.SRCINFO LICENSE t3code-icon.png
             release_prerelease: 'true'
-            release_tag_regex: '^nightly-v'
-            release_version_prefix: 'nightly-v'
+            release_tag_regex: '^v[0-9]+\.[0-9]+\.[0-9]+-nightly\.'
+            release_version_prefix: 'v'
             asset_regex: '^T3-Code-.*-x86_64\.AppImage$'
     defaults:
       run:
