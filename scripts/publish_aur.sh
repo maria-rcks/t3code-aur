@@ -8,6 +8,26 @@ AUR_COMMIT_EMAIL="${AUR_COMMIT_EMAIL:-t3code-ci@users.noreply.github.com}"
 AUR_PAYLOAD_FILES="${AUR_PAYLOAD_FILES:-PKGBUILD .SRCINFO LICENSE t3code-icon.png}"
 DRY_RUN="${DRY_RUN:-false}"
 
+retry() {
+  local attempt max_attempts delay
+  max_attempts=3
+  delay=5
+
+  for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+    if "$@"; then
+      return 0
+    fi
+
+    if ((attempt == max_attempts)); then
+      return 1
+    fi
+
+    echo "Command failed; retrying in ${delay}s (${attempt}/${max_attempts})..." >&2
+    sleep "$delay"
+    delay=$((delay * 2))
+  done
+}
+
 if [[ "$DRY_RUN" != "true" && -z "${AUR_SSH_PRIVATE_KEY:-}" ]]; then
   echo "AUR_SSH_PRIVATE_KEY is required" >&2
   exit 1
@@ -40,9 +60,8 @@ chmod 644 /tmp/aur_known_hosts
 
 export GIT_SSH_COMMAND="ssh -i /tmp/aur_id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=/tmp/aur_known_hosts -o StrictHostKeyChecking=yes"
 
-git ls-remote "$AUR_GIT_URL" >/dev/null
 rm -rf /tmp/aur-repo
-git clone "$AUR_GIT_URL" /tmp/aur-repo
+retry git clone "$AUR_GIT_URL" /tmp/aur-repo
 
 git config --global --add safe.directory /tmp/aur-repo
 rsync -a --delete --exclude='.git/' /tmp/aur-payload/ /tmp/aur-repo/
@@ -59,4 +78,4 @@ if git diff --cached --quiet; then
 fi
 
 git commit -m "chore(aur): sync from ${GITHUB_REPOSITORY:-local}@${GITHUB_SHA:-local}"
-git push origin "$AUR_BRANCH"
+retry git push origin "$AUR_BRANCH"
