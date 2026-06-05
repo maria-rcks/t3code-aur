@@ -210,4 +210,6 @@ jobs:
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -m "chore(update): ${{ matrix.package.name }} ${PKGVER}-${PKGREL}"
+          # Pull any commits pushed by earlier matrix jobs before pushing.
+          git pull --rebase origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
