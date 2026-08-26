@@ -2,7 +2,7 @@
 
 pkgname=t3code-bin
 pkgver=0.0.33
-pkgrel=1
+pkgrel=2
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
 arch=('x86_64')
 _upstream_tag='v0.0.33'
@@ -118,6 +118,7 @@ Terminal=false
 Type=Application
 Icon=t3code
 StartupWMClass=t3code
+MimeType=x-scheme-handler/t3code;x-scheme-handler/t3code-dev;
 Categories=Development;
 EOF
 
