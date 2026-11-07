@@ -61,8 +61,7 @@ sed -Ei "s/^_upstream_version=.*/_upstream_version='${upstream_version_escaped}'
 sed -Ei "s/^sha256sums_x86_64=.*/sha256sums_x86_64=('${appimage_sha256_escaped}')/" "$PKGBUILD_PATH"
 sed -Ei "s/^sha256sums_aarch64=.*/sha256sums_aarch64=('${appimage_sha256_aarch64_escaped}')/" "$PKGBUILD_PATH"
 
-printf '%s  T3-Code-%s-x86_64.AppImage\n%s  T3-Code-%s-arm64.AppImage\n' \
-  "$APPIMAGE_SHA256" "$UPSTREAM_VERSION" "$APPIMAGE_SHA256_AARCH64" "$UPSTREAM_VERSION" > "$STATE_FILE"
+printf '%s\n%s\n' "$APPIMAGE_SHA256" "$APPIMAGE_SHA256_AARCH64" > "$STATE_FILE"
 
 printf 'pkgver=%s\n' "$new_pkgver"
 printf 'pkgrel=%s\n' "$new_pkgrel"

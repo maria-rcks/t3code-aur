@@ -71,10 +71,10 @@ resolve_asset "$ASSET_REGEX"
 upstream_version="${upstream_tag#"$RELEASE_VERSION_PREFIX"}"
 pkgver_candidate="$(printf '%s' "$upstream_version" | tr '-' '_' | tr -cd '[:alnum:]_.+')"
 
-upstream_state="$(printf '%s  %s\n%s  %s' "$appimage_sha256" "$appimage_name" "$appimage_sha256_aarch64" "$appimage_name_aarch64")"
+upstream_state="${appimage_sha256}${appimage_sha256_aarch64}"
 previous_state=""
 if [[ -f "$STATE_FILE" ]]; then
-  previous_state="$(cat "$STATE_FILE")"
+  previous_state="$(tr -d '[:space:]' < "$STATE_FILE")"
 fi
 
 changed="false"
