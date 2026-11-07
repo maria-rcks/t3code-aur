@@ -7,6 +7,7 @@ UPSTREAM_TAG="${UPSTREAM_TAG:-}"
 UPSTREAM_VERSION="${UPSTREAM_VERSION:-}"
 PKGVER_CANDIDATE="${PKGVER_CANDIDATE:-}"
 APPIMAGE_SHA256="${APPIMAGE_SHA256:-}"
+APPIMAGE_SHA256_AARCH64="${APPIMAGE_SHA256_AARCH64:-}"
 
 if [[ -z "$UPSTREAM_TAG" || -z "$UPSTREAM_VERSION" ]]; then
   echo "UPSTREAM_TAG and UPSTREAM_VERSION are required" >&2
@@ -18,8 +19,8 @@ if [[ -z "$PKGVER_CANDIDATE" ]]; then
   exit 1
 fi
 
-if [[ -z "$APPIMAGE_SHA256" ]]; then
-  echo "APPIMAGE_SHA256 is required" >&2
+if [[ -z "$APPIMAGE_SHA256" || -z "$APPIMAGE_SHA256_AARCH64" ]]; then
+  echo "APPIMAGE_SHA256 and APPIMAGE_SHA256_AARCH64 are required" >&2
   exit 1
 fi
 
@@ -51,14 +52,16 @@ new_pkgver_escaped="$(escape_sed_replacement "$new_pkgver")"
 upstream_tag_escaped="$(escape_sed_replacement "$UPSTREAM_TAG")"
 upstream_version_escaped="$(escape_sed_replacement "$UPSTREAM_VERSION")"
 appimage_sha256_escaped="$(escape_sed_replacement "$APPIMAGE_SHA256")"
+appimage_sha256_aarch64_escaped="$(escape_sed_replacement "$APPIMAGE_SHA256_AARCH64")"
 
 sed -Ei "s/^pkgver=.*/pkgver=${new_pkgver_escaped}/" "$PKGBUILD_PATH"
 sed -Ei "s/^pkgrel=.*/pkgrel=${new_pkgrel}/" "$PKGBUILD_PATH"
 sed -Ei "s/^_upstream_tag=.*/_upstream_tag='${upstream_tag_escaped}'/" "$PKGBUILD_PATH"
 sed -Ei "s/^_upstream_version=.*/_upstream_version='${upstream_version_escaped}'/" "$PKGBUILD_PATH"
-sed -Ei "/^sha256sums=\(/,/^\)/{0,/^[[:space:]]*'[^']*'[[:space:]]*$/{s//  '${appimage_sha256_escaped}'/}}" "$PKGBUILD_PATH"
+sed -Ei "s/^sha256sums_x86_64=.*/sha256sums_x86_64=('${appimage_sha256_escaped}')/" "$PKGBUILD_PATH"
+sed -Ei "s/^sha256sums_aarch64=.*/sha256sums_aarch64=('${appimage_sha256_aarch64_escaped}')/" "$PKGBUILD_PATH"
 
-printf '%s\n' "$APPIMAGE_SHA256" > "$STATE_FILE"
+printf '%s\n%s\n' "$APPIMAGE_SHA256" "$APPIMAGE_SHA256_AARCH64" > "$STATE_FILE"
 
 printf 'pkgver=%s\n' "$new_pkgver"
 printf 'pkgrel=%s\n' "$new_pkgrel"

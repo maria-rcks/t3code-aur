@@ -1,13 +1,13 @@
 # Maintainer: anon
 
 pkgname=t3code-bin
-pkgver=0.0.33
+pkgver=0.1.5
 pkgrel=1
 pkgdesc='T3 Code desktop app packaged from the upstream AppImage'
-arch=('x86_64')
-_upstream_tag='v0.0.33'
-_upstream_version='0.0.33'
-_appimage_name="T3-Code-${_upstream_version}-x86_64.AppImage"
+arch=('x86_64' 'aarch64')
+_upstream_tag='v0.1.5'
+_upstream_version='0.1.5'
+_appimage_name="T3-Code-${_upstream_version}-${CARCH/aarch64/arm64}.AppImage"
 url='https://t3.codes'
 license=('MIT')
 depends=(
@@ -46,15 +46,22 @@ provides=("t3code=${pkgver}")
 conflicts=('t3code')
 options=('!debug' '!emptydirs' '!strip')
 source=(
-  "${_appimage_name}::https://github.com/pingdotgg/t3code/releases/download/${_upstream_tag}/${_appimage_name}"
   't3code-icon.png'
   'LICENSE'
 )
 sha256sums=(
-  '415c8648f43c3d22d572f27f2c50fdc8c310ea7fcde9537b903e1e2f1c8775a1'
   '52c86008b11f90f36b8a8f4cc43b1352d5fda9084c6e5691b806f5bca1a968b6'
   '935d8f2af0c703f9c39517ee57cc4930b19d02d533be930b63f0e82f93614b43'
 )
+
+source_x86_64=(
+  "T3-Code-${_upstream_version}-x86_64.AppImage::https://github.com/pingdotgg/t3code/releases/download/${_upstream_tag}/T3-Code-${_upstream_version}-x86_64.AppImage"
+)
+sha256sums_x86_64=('933ff9dc4c650a75aa4087c98f2ae6c6540c233f0e2feb32ebff950b09be849d')
+source_aarch64=(
+  "T3-Code-${_upstream_version}-arm64.AppImage::https://github.com/pingdotgg/t3code/releases/download/${_upstream_tag}/T3-Code-${_upstream_version}-arm64.AppImage"
+)
+sha256sums_aarch64=('2ad8c6adcdcbc2107ff4555d149a0a91a59d764875365c57c68b4f8272537682')
 
 prepare() {
   chmod +x "$srcdir/$_appimage_name"

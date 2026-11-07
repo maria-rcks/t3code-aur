@@ -7,6 +7,7 @@ RELEASE_TAG_REGEX="${RELEASE_TAG_REGEX:-^v}"
 RELEASE_PRERELEASE="${RELEASE_PRERELEASE:-false}"
 RELEASE_VERSION_PREFIX="${RELEASE_VERSION_PREFIX:-v}"
 ASSET_REGEX="${ASSET_REGEX:-^T3-Code-.*-x86_64\.AppImage$}"
+ASSET_REGEX_AARCH64="${ASSET_REGEX_AARCH64:-^T3-Code-.*-arm64\.AppImage$}"
 out_file="${GITHUB_OUTPUT:-}"
 
 releases_json="$(gh api "repos/$UPSTREAM_REPO/releases?per_page=100")"
@@ -29,44 +30,55 @@ if [[ -z "$upstream_tag" ]]; then
   exit 1
 fi
 
-asset_json="$(jq -c --arg regex "$ASSET_REGEX" '
-  .assets
-  | map(select(.name | test($regex)))
-  | first // empty
-' <<<"$release_json")"
+resolve_asset() {
+  asset_json="$(jq -c --arg regex "$1" '
+    .assets
+    | map(select(.name | test($regex)))
+    | first // empty
+  ' <<<"$release_json")"
 
-if [[ -z "$asset_json" || "$asset_json" == "null" ]]; then
-  echo "Failed to find x86_64 AppImage asset in latest release for $UPSTREAM_REPO" >&2
-  exit 1
-fi
+  if [[ -z "$asset_json" || "$asset_json" == "null" ]]; then
+    echo "Failed to find AppImage asset matching $1 in latest release for $UPSTREAM_REPO" >&2
+    exit 1
+  fi
 
-appimage_name="$(jq -r '.name // empty' <<<"$asset_json")"
-appimage_url="$(jq -r '.browser_download_url // empty' <<<"$asset_json")"
-appimage_sha256="$(jq -r '.digest // empty' <<<"$asset_json")"
-appimage_sha256="${appimage_sha256#sha256:}"
+  appimage_name="$(jq -r '.name // empty' <<<"$asset_json")"
+  appimage_url="$(jq -r '.browser_download_url // empty' <<<"$asset_json")"
+  appimage_sha256="$(jq -r '.digest // empty' <<<"$asset_json")"
+  appimage_sha256="${appimage_sha256#sha256:}"
 
-if [[ -z "$appimage_name" || -z "$appimage_url" ]]; then
-  echo "Incomplete AppImage asset metadata returned by GitHub." >&2
-  exit 1
-fi
+  if [[ -z "$appimage_name" || -z "$appimage_url" ]]; then
+    echo "Incomplete AppImage asset metadata returned by GitHub." >&2
+    exit 1
+  fi
 
-if [[ -z "$appimage_sha256" ]]; then
-  tmp_dir="$(mktemp -d)"
-  trap 'rm -rf "$tmp_dir"' EXIT
-  curl -fL --retry 3 --retry-delay 2 "$appimage_url" -o "$tmp_dir/$appimage_name"
-  appimage_sha256="$(sha256sum "$tmp_dir/$appimage_name" | awk '{print $1}')"
-fi
+  if [[ -z "$appimage_sha256" ]]; then
+    if [[ -z "${tmp_dir:-}" ]]; then
+      tmp_dir="$(mktemp -d)"
+      trap 'rm -rf "$tmp_dir"' EXIT
+    fi
+    curl -fL --retry 3 --retry-delay 2 "$appimage_url" -o "$tmp_dir/$appimage_name"
+    appimage_sha256="$(sha256sum "$tmp_dir/$appimage_name" | awk '{print $1}')"
+  fi
+}
+
+resolve_asset "$ASSET_REGEX_AARCH64"
+appimage_name_aarch64="$appimage_name"
+appimage_url_aarch64="$appimage_url"
+appimage_sha256_aarch64="$appimage_sha256"
+resolve_asset "$ASSET_REGEX"
 
 upstream_version="${upstream_tag#"$RELEASE_VERSION_PREFIX"}"
 pkgver_candidate="$(printf '%s' "$upstream_version" | tr '-' '_' | tr -cd '[:alnum:]_.+')"
 
-previous_sha256=""
+upstream_state="${appimage_sha256}${appimage_sha256_aarch64}"
+previous_state=""
 if [[ -f "$STATE_FILE" ]]; then
-  previous_sha256="$(tr -d '[:space:]' < "$STATE_FILE")"
+  previous_state="$(tr -d '[:space:]' < "$STATE_FILE")"
 fi
 
 changed="false"
-if [[ "$appimage_sha256" != "$previous_sha256" ]]; then
+if [[ "$upstream_state" != "$previous_state" ]]; then
   changed="true"
 fi
 
@@ -77,6 +89,9 @@ printf 'pkgver_candidate=%s\n' "$pkgver_candidate"
 printf 'appimage_name=%s\n' "$appimage_name"
 printf 'appimage_url=%s\n' "$appimage_url"
 printf 'appimage_sha256=%s\n' "$appimage_sha256"
+printf 'appimage_name_aarch64=%s\n' "$appimage_name_aarch64"
+printf 'appimage_url_aarch64=%s\n' "$appimage_url_aarch64"
+printf 'appimage_sha256_aarch64=%s\n' "$appimage_sha256_aarch64"
 printf 'state_file=%s\n' "$STATE_FILE"
 printf 'release_prerelease=%s\n' "$RELEASE_PRERELEASE"
 printf 'release_tag_regex=%s\n' "$RELEASE_TAG_REGEX"
@@ -91,6 +106,9 @@ if [[ -n "$out_file" ]]; then
     printf 'appimage_name=%s\n' "$appimage_name"
     printf 'appimage_url=%s\n' "$appimage_url"
     printf 'appimage_sha256=%s\n' "$appimage_sha256"
+    printf 'appimage_name_aarch64=%s\n' "$appimage_name_aarch64"
+    printf 'appimage_url_aarch64=%s\n' "$appimage_url_aarch64"
+    printf 'appimage_sha256_aarch64=%s\n' "$appimage_sha256_aarch64"
     printf 'state_file=%s\n' "$STATE_FILE"
     printf 'release_prerelease=%s\n' "$RELEASE_PRERELEASE"
     printf 'release_tag_regex=%s\n' "$RELEASE_TAG_REGEX"
