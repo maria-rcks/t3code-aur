@@ -133,6 +133,7 @@ jobs:
           UPSTREAM_VERSION: ${{ steps.check.outputs.upstream_version }}
           PKGVER_CANDIDATE: ${{ steps.check.outputs.pkgver_candidate }}
           APPIMAGE_SHA256: ${{ steps.check.outputs.appimage_sha256 }}
+          APPIMAGE_SHA256_AARCH64: ${{ steps.check.outputs.appimage_sha256_aarch64 }}
           STATE_FILE: ${{ matrix.package.state_file }}
         run: |
           set -euo pipefail

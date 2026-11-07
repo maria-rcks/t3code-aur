@@ -29,7 +29,7 @@ paru -S t3code-nightly-bin
 ## What this repo does
 
 - Tracks upstream T3 Code releases and nightly prereleases.
-- Packages the upstream x86_64 AppImage for Arch Linux.
+- Packages the upstream AppImage for x86_64 (Arch Linux) and aarch64 (Arch Linux ARM).
 - Publishes `t3code-bin` and `t3code-nightly-bin` to the AUR automatically.
 
 ## Repo layout
